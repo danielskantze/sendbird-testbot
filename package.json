@@ -1,0 +1,33 @@
+{
+  "name": "testbot",
+  "version": "1.0.0",
+  "description": "Chat bot test functionality for coupleness app.",
+  "main": "dist/main.js",
+  "scripts": {
+    "create-config-template": "mkdir -p conf && echo '{\"appId\": \"SENDBIRD_APP_ID\"}' > conf/local-template.json",
+    "start": "tsc && node dist/main.js",
+    "start-test": "bash bin/start-chat-test.sh sendbird_open_channel_29770_111cfebec3fc44af13fbce7db9ca13c330e0c3f5 3",
+    "stop-test": "bash bin/stop-chat-test.sh",
+    "lint": "eslint . --ext .ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "sendbird": "^3.1.7"
+  },
+  "keywords": [
+    "coupleness",
+    "test",
+    "tool",
+    "sendbird",
+    "chat"
+  ],
+  "author": "Daniel Skantze",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^17.0.13",
+    "@typescript-eslint/eslint-plugin": "^5.10.1",
+    "@typescript-eslint/parser": "^5.10.1",
+    "eslint": "^8.3.0",
+    "typescript": "^4.5.5"
+  }
+}
