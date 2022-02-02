@@ -4,7 +4,7 @@ export interface ChannelData {
     handlerId: string
 }
 
-export type ChannelListener = (type:ChannelEventType, messageId:number, message?:any) => any;
+export type ChannelListener = (type:ChannelEventType, messageId:number, message?:any, sender?:any) => any;
 
 export enum ChannelEventType {
     RECEIVE = 'receive',
@@ -20,6 +20,7 @@ export interface ChatService {
     joinChannel: (url: string) => Promise<ChannelData>,
     sendMessage: (channelData: ChannelData, text: string) => Promise<any>,
     setMessageListener: (channelData: ChannelData, listener:ChannelListener) => void,
+    setUserMetadata: (metadata:Record<string, string>) => void,
     clearMessageListener: (channelData: ChannelData) => void,
     createGroupCounter: (channelData: ChannelData, counter: string) => Promise<number>,
     incrementGroupCounter: (channelData: ChannelData, counter: string) => Promise<number>

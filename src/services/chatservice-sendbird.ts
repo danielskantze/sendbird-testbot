@@ -1,4 +1,4 @@
-import SendBird, { SendBirdInstance } from "sendbird";
+import SendBird, { AdminMessage, FileMessage, SendBirdInstance, UserMessage } from "sendbird";
 import { ChannelData, ChannelEventType, ChatService, ChannelListener } from "./chatservice";
 
 type SendbirdConfig = {
@@ -63,6 +63,20 @@ function sbIncrementGroupCounter(sb: SendBirdInstance, channelData: ChannelData,
                 reject(error);
             } else {
                 resolve(response[counter] as number);
+            }
+        });
+    });
+    return promise;
+}
+
+async function sbSetUserMetadata(sb:SendBirdInstance, metadata:Record<string, string>): Promise<any> {
+    const user = sb.currentUser;
+    const promise = new Promise<any>((resolve, reject) => {
+        user.updateMetaData(metadata, true, (response, error) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(response);
             }
         });
     });
@@ -146,9 +160,17 @@ function sbSendMessage(sb: SendBirdInstance, channelData: any, text: string): Pr
 function sbSetMessageListener(sb:SendBirdInstance, channelData: ChannelData, listener:ChannelListener) {
     const handler:SendBird.ChannelHandler = channelData.handler;
     sb.addChannelHandler(channelData.handlerId, handler);
-    handler.onMessageReceived = (channel, message) => listener(ChannelEventType.RECEIVE, message.messageId, message);
-    handler.onMessageUpdated = (channel, message) => listener(ChannelEventType.UPDATE, message.messageId, message);
-    handler.onMessageDeleted = (channel, messageId) => listener(ChannelEventType.DELETE, messageId);
+    const triggerListenerFn = (channel, message: AdminMessage | UserMessage | FileMessage) => {
+        if (message.messageType === 'admin') {
+            listener(ChannelEventType.RECEIVE, message.messageId, message, {});    
+        } else if ((message.messageType === 'user') || (message.messageType === 'file')) {
+            const { sender } = (message as UserMessage | FileMessage);
+            listener(ChannelEventType.RECEIVE, message.messageId, message, sender);
+        }
+    };
+    handler.onMessageReceived = triggerListenerFn;
+    handler.onMessageUpdated = triggerListenerFn;
+    handler.onMessageDeleted = (channel, messageId:number) => listener(ChannelEventType.DELETE, messageId);
 }
 
 function sbClearMessageListener(sb:SendBirdInstance, channelData: ChannelData) {
@@ -168,6 +190,7 @@ export function createSendbirdService(config: SendbirdConfig): ChatService {
         listChannels: () => sbListChannels(sb),
         getChannel: (url: string) => sbGetChannel(sb, url),
         joinChannel: (url: string) => sbJoinChannel(sb, url),
+        setUserMetadata: (metadata:Record<string, string>) => sbSetUserMetadata(sb, metadata),
         setMessageListener: (channelData: ChannelData, listener:ChannelListener) => sbSetMessageListener(sb, channelData, listener),
         clearMessageListener: (channelData: ChannelData) => sbClearMessageListener(sb, channelData),
         sendMessage: (channelData: ChannelData, text: string) => sbSendMessage(sb, channelData, text),
