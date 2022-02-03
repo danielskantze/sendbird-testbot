@@ -4,9 +4,9 @@
   "description": "Chat bot test functionality for coupleness app.",
   "main": "dist/main.js",
   "scripts": {
-    "create-config-template": "mkdir -p conf && echo '{\"appId\": \"SENDBIRD_APP_ID\"}' > conf/local-template.json",
+    "create-config-template": "mkdir -p conf && echo '{\"appId\": \"SENDBIRD_APP_ID\", \"operator\": \"testbot\"}' > conf/local-template.json",
     "start": "tsc && node dist/main.js",
-    "start-test": "bash bin/start-chat-test.sh sendbird_open_channel_29770_111cfebec3fc44af13fbce7db9ca13c330e0c3f5 3",
+    "start-test": "bash bin/start-chat-test.sh",
     "stop-test": "bash bin/stop-chat-test.sh",
     "lint": "eslint . --ext .ts",
     "test": "echo \"Error: no test specified\" && exit 1"

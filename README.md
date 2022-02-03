@@ -6,47 +6,80 @@ Everything is controlled through commands specified in package.json using defaul
 
 ## Preparations
 
+First install all dependencies:
+
+`npm i`
+
 First create a configuration file:
 
 `npm run create-config-template`
 
 Rename it to conf/local.json and enter your Sendbird AppID (XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX). You can find the channelUrl of the chat you like in the sendbird dashboard: https://dashboard.sendbird.com/ 
-
-`npm i`
-
 ## Running a single bot instance
 
-This command will connect to a chat on the channelUrl with a specific nickname. 
+This command will connect to a chat as a participant on the channelUrl with a specific nickname. 
 
-`npm run start channelUrl nickname`
+`npm run start channelUrl nickname false`
 
 Open the sendbird dashboard https://dashboard.sendbird.com/ and navigate to the chat. You can reply to the bot by starting the message with the nickname. The bot will send a thank you note for the reply, wait a bit and ask a new question. 
 
-### Example session
+This command will connect to a chat as a host on the channelUrl with a specific nickname. 
 
-bot nickname is *breezynoodles* (notice the operator's response starting with 'breezynoodles').
+`npm run start channelUrl nickname true`
 
-`breezynoodles>How can we get more time for each other?`
+## Details
 
-`operator>breezynoodles That is a good question...`
+The tool can act both as host (also called "operator") and participant. 
 
-`breezynoodles>Thank you for the reply`
+Consider this dialog
 
-`...`
+```
+[1] redpenguin> eventhost What time is it?
+[2] eventhost> redpenguin The time is 14:52
+[3] redpenguin> Thank you eventhost. 
+```
+
+### Host mode
+
+The host mode will wait until someone asks it a question (done by starting the message with the operator's nickname) `[1]` and then post a reply starting the the particpant's nickname first `[2]`. E.g:
+
+### Participant mode
+
+The participant mode will wait for a bit and then ask the operator a question `[1]`. It will then wait for the operator's reply `[2]` and then write a thank you note `[3]` (making sure that the message does not start with the operator nickname that would trigger another reply). After a while it picks another question and there is another cycle.
 
 ## Running the test with many bots
 
-`npm run start-test`
+`npm run start-test channel_url number_of_participants`
 
 This command will start a bunch of node processes in the background, one for each participant. Logs will be saved for each participant in the `logs`-folder. 
 
-`bash bin/start-chat-test.sh channel_url number_of_participants` can also be used to start the test.
+This command can also be used to start the test:
+
+`bash bin/start-chat-test.sh channel_url number_of_participants` 
 
 ## Stopping the tests
 
 This command will kill all processes with the string 'coupleness_chat_tester'
 
 `npm run stop-test`
+
+## Tips
+
+You can also supply the channelUrl, the nickname and if the bot should act as a host or a participant in config files and start using:
+
+E.g. `./conf/local-args-host.json:`
+
+```
+{
+    "channelUrl": "sendbird_open_channel_...",
+    "nickname": "testbot",
+    "isHost": "true"
+}
+```
+
+And then start with:
+
+`npm run start -- -f ./conf/local-args-host.json`
 
 ## Customizations & further development
 

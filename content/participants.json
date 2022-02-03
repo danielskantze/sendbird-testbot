@@ -1,5 +1,5 @@
 {
-    "questions": [
+    "main": [
         "Can we revive our marriage?",
         "Will we ever feel desire again?",
         "Can we get over the affairs that we both had?",
@@ -12,9 +12,9 @@
         "Can we spice things up?",
         "How do we get more time for each other with all the kids?"
     ],
-    "thankyouPhrases": [
+    "optional": [
         "You're the best. That is a completely new perspective on this.",
-        "Thank you. I'm humbled and grateful.",
+        "I'm humbled and grateful.",
         "Whew. You knocked me off my feet! Now I have something to think about.",
         "Wow, wise words. My heart is still smiling.",
         "Your thoughtfulness is a gift I will treasure.",

@@ -1,28 +1,33 @@
 import { basename } from 'path';
 import { readConfig } from './src/config';
 import { createSendbirdService } from './src/services/chatservice-sendbird';
-import * as user from './src/user/user';
+import { UserPhrases } from './src/user/user';
+import * as participant from './src/user/participant';
+import * as host from './src/user/host';
 import { readJsonFile } from './src/util/file';
 import { opaqueId } from './src/util/rnd';
 
 let isRunning = false;
 
-async function start(channelUrl: string, nickname: string) {
+async function start(channelUrl: string, nickname: string, isHost:boolean) {
+    const phrasesFile = isHost ? './content/host.json' : './content/participants.json';
     const config = await readConfig('./conf/local.json');
-    const phrases = (await readJsonFile('./content/participants.json')) as user.UserPhrases;
+    const phrases = (await readJsonFile(phrasesFile)) as UserPhrases;
     const service = createSendbirdService({ appId: config.appId });
-    const u = user.createUser(
-        {
-            id: opaqueId(),
-            nickname: nickname,
-            channelUrl,
-            phrases: phrases
-        },
-        service
-    );
-    await user.start(u, () => {
-        isRunning = false;
-    });
+    const userConfig = {
+        id: opaqueId(),
+        nickname: nickname,
+        channelUrl,
+        phrases: phrases
+    };
+    if (isHost) {
+        const u = host.createUser(userConfig, service);
+        await host.start(u, () => { isRunning = false; });
+    
+    } else {
+        const u = participant.createUser(userConfig, service, config.operator);
+        await participant.start(u, () => { isRunning = false; });            
+    }
 }
 
 async function processArguments(args: Array<string>): Promise<Record<string, string>> {
@@ -40,28 +45,28 @@ async function processArguments(args: Array<string>): Promise<Record<string, str
     } 
     return {
         channelUrl: args[1],
-        nickname: args[2]
+        nickname: args[2],
+        isHost: args.length < 4 ? 'false' : args[3]
     }
 }
 
 function main(args:Array<string>):void {
     processArguments(args)
-        .then(({ channelUrl, nickname }) => {
+        .then(({ channelUrl, nickname, isHost }) => {
             console.log(channelUrl, nickname);
-            start(channelUrl, nickname);
+            start(channelUrl, nickname, isHost.toLowerCase() === 'true');
         })
         .catch(error => {
             console.log(error);
             console.log('\nUsage:\n');
-            console.log(basename(process.argv[0]), 'channelUrl nickname');
+            console.log(basename(args[0]), 'channelUrl nickname');
             console.log('\nor\n');
-            console.log(basename(process.argv[0]), '-f launchdata.json');
+            console.log(basename(args[0]), '-f launchdata.json');
             console.log('Where launchdata.json contains an object with channelUrl nickname as properties');
             console.log('\n');
             process.exit(0);
         });
 }
-
 process.on('SIGINT', function () {
     console.log('Caught interrupt signal');
     process.exit();
