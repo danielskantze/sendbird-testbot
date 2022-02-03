@@ -1,5 +1,5 @@
-import StateMachine from './util/statemachine';
-import { ChannelData, ChannelEventType, ChatService } from './services/chatservice';
+import StateMachine from '../util/statemachine';
+import { ChannelData, ChannelEventType, ChatService } from '../services/chatservice';
 
 export type UserPhrases = {
     questions: Array<string>,
@@ -107,7 +107,7 @@ async function onUserConnected(user: User) {
     const scopedHandler = (type: ChannelEventType, messageId: number, message: any, sender: any) => {
         return onMessageEvent(user, type, messageId, message, sender);
     };
-    user.service.setUserMetadata({ userColor: '#0000ff' });
+    await user.service.setUserMetadata({ userColor: '#ff00ff' });
     user.service.setMessageListener(user.channelData, scopedHandler);
     user.state.changeState(UserState.PENDING);
 }
