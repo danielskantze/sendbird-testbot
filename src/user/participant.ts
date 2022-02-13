@@ -9,22 +9,23 @@ type User = {
     channelData: ChannelData,
     questionMessageId: number,
     replyMessage: any,
-    operator: string
+    operator: string,
 };
 
 const delayFactor = 1.5;
 
-function createStateMachine(user: User) {
+function createStateMachine(user: User, repeat:boolean = true) {
     const sm = new StateMachine(AllUserStates, UserState.CREATED);
     sm.addTransitions(UserState.CREATED, [UserState.CONNECTED, UserState.ERROR]);
     sm.addTransitions(UserState.CONNECTED, [UserState.PENDING, UserState.DISCONNECTED, UserState.ERROR]);
     sm.addTransitions(UserState.PENDING, [UserState.SENT, UserState.DISCONNECTED, UserState.ERROR]);
     sm.addTransitions(UserState.SENT, [UserState.ANSWERED, UserState.DISCONNECTED, UserState.ERROR]);
-    sm.addTransitions(UserState.ANSWERED, [UserState.PENDING, UserState.DISCONNECTED, UserState.ERROR]);
+    sm.addTransitions(UserState.ANSWERED, [UserState.END, UserState.PENDING, UserState.DISCONNECTED, UserState.ERROR]);
     sm.addStateListener(UserState.CONNECTED, () => onUserConnected(user));
     sm.addStateListener(UserState.PENDING, () => onPendingInteraction(user));
     sm.addStateListener(UserState.ANSWERED, () => onMessageAnswered(user));
     sm.addStateListener(UserState.ERROR, () => onError(user));
+    sm.addStateListener(UserState.END, () => onEnd(user));
     sm.addStateChangeListener((state: string) => { console.log("[", user.settings.nickname, "] STATE --> ", state); });
     return sm;
 }
@@ -121,11 +122,19 @@ function onMessageEvent(user: User, type: ChannelEventType, messageId: number, m
 
 async function onMessageAnswered(user: User) {
     await sendThankyou(user);
-    user.state.changeState(UserState.PENDING);
+    if (user.settings.isGroundhogDay) {
+        user.state.changeState(UserState.PENDING);
+    } else {
+        user.state.changeState(UserState.END);
+    }    
 }
 
 async function onError(user: User) {
     console.error("An error has occurred. Will not continue");
+    await stop(user);
+}
+
+async function onEnd(user: User) {
     await stop(user);
 }
 

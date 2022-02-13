@@ -1,7 +1,7 @@
 import { basename } from 'path';
 import { readConfig } from './src/config';
 import { createSendbirdService } from './src/services/chatservice-sendbird';
-import { UserPhrases } from './src/user/user';
+import { UserPhrases, UserSettings } from './src/user/user';
 import * as participant from './src/user/participant';
 import * as host from './src/user/host';
 import { readJsonFile } from './src/util/file';
@@ -9,16 +9,17 @@ import { opaqueId } from './src/util/rnd';
 
 let isRunning = false;
 
-async function start(channelUrl: string, nickname: string, isHost:boolean) {
+async function start(channelUrl: string, nickname: string, isHost:boolean, isGroundhogDay: boolean) {
     const phrasesFile = isHost ? './content/host.json' : './content/participants.json';
     const config = await readConfig('./conf/local.json');
     const phrases = (await readJsonFile(phrasesFile)) as UserPhrases;
     const service = createSendbirdService({ appId: config.appId });
-    const userConfig = {
+    const userConfig: UserSettings = {
         id: opaqueId(),
         nickname: nickname,
         channelUrl,
-        phrases: phrases
+        phrases: phrases,
+        isGroundhogDay
     };
     if (isHost) {
         const u = host.createUser(userConfig, service);
@@ -46,20 +47,23 @@ async function processArguments(args: Array<string>): Promise<Record<string, str
     return {
         channelUrl: args[1],
         nickname: args[2],
-        isHost: args.length < 4 ? 'false' : args[3]
+        isHost: args.length < 4 ? 'false' : args[3],
+        isGroundhogDay: args.length < 5 ? 'false' : args[4]
     }
 }
 
 function main(args:Array<string>):void {
     processArguments(args)
-        .then(({ channelUrl, nickname, isHost }) => {
+        .then(({ channelUrl, nickname, isHost, isGroundhogDay }) => {
             console.log(channelUrl, nickname);
-            start(channelUrl, nickname, isHost.toLowerCase() === 'true');
+            const isHostParam = isHost.toLowerCase() === 'true';
+            const isGroundhogDayParam = isGroundhogDay.toLowerCase() !== 'false';
+            start(channelUrl, nickname, isHostParam, isGroundhogDayParam);
         })
         .catch(error => {
             console.log(error);
             console.log('\nUsage:\n');
-            console.log(basename(args[0]), 'channelUrl nickname');
+            console.log(basename(args[0]), 'channelUrl nickname is_host');
             console.log('\nor\n');
             console.log(basename(args[0]), '-f launchdata.json');
             console.log('Where launchdata.json contains an object with channelUrl nickname as properties');

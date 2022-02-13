@@ -2,7 +2,8 @@ export type UserSettings = {
     id: string,
     nickname: string,
     channelUrl: string,
-    phrases: UserPhrases
+    phrases: UserPhrases,
+    isGroundhogDay: boolean
 };
 
 export type UserPhrases = {
@@ -17,7 +18,8 @@ export enum UserState {
     PENDING = 'pending',
     SENT = 'sent',
     ANSWERED = 'answered',
-    ERROR = 'error'
+    ERROR = 'error',
+    END = 'end'
 }
 
 export const AllUserStates = Object.keys(UserState).filter(k => k === k.toLowerCase()); // Hack to get all keys, typescript transpiles to a 2-way mapping in an object. Rely on the convention to write enum keys in UPPERCASE and their values in lowercase to do the filtering. 
